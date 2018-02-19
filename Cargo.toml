@@ -1,0 +1,7 @@
+[package]
+name = "string-distance"
+version = "0.1.0"
+authors = ["Matthew McLeod <mmcleod@salesforce.com>"]
+
+[dependencies]
+unicode-segmentation = "0.1.0"
