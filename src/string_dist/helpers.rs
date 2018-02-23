@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::cmp::{Ord,PartialEq};
-use std::cmp::min;
+use std::cmp::{min, max};
 use std::fmt::{self, Debug, Result};
 use std::ops::{Range, Index, IndexMut};
 
-// String Helpers
+/// String Helpers
 pub trait StringHelpers<'a>
 {
     fn char_count(&'a self) -> i32;
@@ -20,12 +20,39 @@ impl<'a> StringHelpers<'a> for &'a str
     }
 }
 
+/// Mathematical Helper Functions
 pub fn min3<T:Ord>(a:T, b:T, c:T) -> T
 { 
     min(min(a,b),c) 
 }
 
-// Coordinates - we use a struct unfortunately as tuples cannot be hashed
+/// # Distance - To - Simularity
+/// Converts a distance metric to a simularity value.
+/// Simularity values range from 0.0 to 1.0. This is useful to normalize 
+/// best matches with other distances.
+/// 
+/// ## Complexity
+/// Where s1 is the length of str1, and s2 is the length of str2
+/// * Time: s1+s2
+/// * Space: minimal
+/// 
+/// ## Parameters
+/// * `str1` - The first string to compare
+/// * `str2` - The Second string to compare
+/// * -> The simularity value. 0.0 <= value <= 1.0
+pub fn distance_to_simularity(str1:&str, str2:&str, dist:f64) -> f64
+{
+    let longest = max(str1.char_count(), str2.char_count());
+    let m = longest as f64;
+    if m == 0.0 {
+        return 1.0;
+    }
+    (1.0 - (dist / m)) as f64
+}
+
+
+
+/// Coordinates - we use a struct unfortunately as tuples cannot be hashed
 #[derive(Eq,Clone,Hash,Default)]
 struct Coordinate
 {
@@ -45,7 +72,7 @@ impl PartialEq for Coordinate
     }
 }
 
-// Score Matrix
+/// Score Matrix
 pub struct ScoreMatrix<'a>
 {
     str1:&'a str,
@@ -96,18 +123,18 @@ impl<'a> ScoreMatrix<'a>
         self.map[&c]
     }
 }
-type ExtCoordinates = (i32,i32);
+type ExtCoordinates<T> = (T,T);
 type MatrixValue = usize;
-impl<'a> Index<ExtCoordinates> for ScoreMatrix<'a> {
+impl<'a> Index<ExtCoordinates<i32>> for ScoreMatrix<'a> {
     type Output = MatrixValue;
 
-    fn index<'b>(&'b self, index: ExtCoordinates) -> &'b Self::Output {
+    fn index<'b>(&'b self, index: ExtCoordinates<i32>) -> &'b Self::Output {
         let c = Coordinate{x:index.0,y:index.1};
         &self.map[&c]
     }
 }
-impl<'a> IndexMut<ExtCoordinates> for ScoreMatrix<'a> {
-    fn index_mut<'b>(&'b mut self, index: ExtCoordinates) -> &'b mut MatrixValue {
+impl<'a> IndexMut<ExtCoordinates<i32>> for ScoreMatrix<'a> {
+    fn index_mut<'b>(&'b mut self, index: ExtCoordinates<i32>) -> &'b mut MatrixValue {
         let c = Coordinate{x:index.0,y:index.1};
         if self.map.get(&c) == None {
             self.map.insert(Coordinate{x:index.0,y:index.1}, 0 as usize);

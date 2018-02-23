@@ -17,14 +17,14 @@ mod helpers;
 // Edit-Based Simularities
 mod jaro;
 mod hamming;
+mod levenshtein;
 
 pub use self::hamming::hamming_distance;
 pub use self::jaro::jaro_simularity;
 pub use self::jaro::jaro_winkler_simularity;
-
-pub mod osa; // used for dl
-pub mod levenshtein;
-pub mod dl;
+pub use self::levenshtein::levenshtein::levenshtein_distance;
+pub use self::levenshtein::levenshtein::osa_distance;
+pub use self::levenshtein::levenshtein::damerau_levenshtein_distance;
 
 // Smith-Waterman
 // Smith-Waterman-Gotoh

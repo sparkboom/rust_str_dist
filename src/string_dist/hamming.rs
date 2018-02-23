@@ -1,13 +1,14 @@
 use super::helpers::{StringHelpers};
 
-/// Hamming Distance - calculates the string distance using the Hamming Distance algorithm.
+/// # Hamming Distance 
+/// Calculates the string distance using the Hamming Distance algorithm.
 /// The Hamming Distance is one of the more simple algorithms, it assumes strings are of the same
 /// length. This algorithm is typically inappropriate for text strings that are typed.
 /// Mostly used for binary numbers and to measure communication errors.
 /// 
 /// See - https://en.wikipedia.org/wiki/Hamming_distance
 /// 
-/// # Example
+/// ## Example
 /// 
 /// ```
 /// use string_dist::dl;
@@ -18,9 +19,10 @@ use super::helpers::{StringHelpers};
 /// println!("The Hamming Distance between {} and {} is {}", str1, str2, dist);
 /// ```
 /// 
+/// ## Parameters
 /// * `str1` - The first string to compare
 /// * `str2` - The Second string to compare
-/// -> The Hamming Distance of the passed 2 strings
+/// * -> The Hamming Distance of the passed 2 strings
 pub fn hamming_distance(str1:&str, str2:&str) -> usize
 {
     let str_len_delta:usize = (str1.char_count()-str2.char_count()).abs() as usize;

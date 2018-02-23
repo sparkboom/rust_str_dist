@@ -2,7 +2,6 @@
 
 use std::fmt;
 use std::collections::HashMap;
-use helpers::print_matrix;
 
 // Longest Common Substring
 // LCS https://en.wikipedia.org/wiki/Longest_common_substring_problem
@@ -40,7 +39,6 @@ pub fn distance(str1:&str, str2:&str) -> HashMap<String, u8>
 
     println!("Longest Common Substring Calc:");
     println!("{:?}", substrs);
-    print_matrix(str1, str2, &vy);
     substrs
 }
 
