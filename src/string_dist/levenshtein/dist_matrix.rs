@@ -4,8 +4,6 @@ use std::clone::Clone;
 use std::vec::Vec;
 use std::fmt::{Debug, Display, Error, Formatter};
 use std::result::Result;
-use std::iter::repeat;
-
 
 /// # Distance Matrix (dist_matrix)
 /// Is a simple matrix structure that can hold generic value of type T
@@ -133,6 +131,7 @@ impl<T> Debug for DistMatrix<T> where T: Clone + Copy + Display{
 mod dist_matrix_tests
 {
     use super::*;
+    use std::iter::repeat;
     
     #[test]
     fn construction_0_2x0_2() {

@@ -12,6 +12,8 @@
 // https://hpi.de/fileadmin/user_upload/fachgebiete/naumann/folien/SS13/DPDC/DPDC_12_Similarity.pdf
 
 // Helpers
+#[macro_use]
+pub mod macros;
 mod helpers;
 
 // Edit-Based Simularities

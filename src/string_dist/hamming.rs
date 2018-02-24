@@ -3,13 +3,15 @@ use super::helpers::{StringHelpers};
 /// # Hamming Distance 
 /// Calculates the string distance using the Hamming Distance algorithm.
 /// The Hamming Distance is one of the more simple algorithms, it assumes strings are of the same
-/// length. This algorithm is typically inappropriate for text strings that are typed.
-/// Mostly used for binary numbers and to measure communication errors.
+/// length. 
 /// 
 /// See - https://en.wikipedia.org/wiki/Hamming_distance
 /// 
-/// ## Example
+/// ## Uses
+/// * This algorithm is typically inappropriate for text strings that are typed.
+/// * Mostly used for binary numbers and to measure communication errors.
 /// 
+/// ## Example
 /// ```
 /// use string_dist::dl;
 /// 

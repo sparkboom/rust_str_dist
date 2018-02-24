@@ -6,8 +6,21 @@ pub mod levenshtein
     use std::ops::Range;
     use std::cmp::{min, max};
     use std::collections::HashMap;
-    use super::super::helpers::{ScoreMatrix, min3, StringHelpers};
+    use super::super::helpers::StringHelpers;
+    
     use super::dist_matrix::DistMatrix;
+
+    struct CalcState<'a, T: 'a> {
+        matrix:&'a DistMatrix<T>,
+        cost: i32,
+        score: i32,
+        i1: i32,
+        i2: i32,
+        str1: &'a str,
+        str2: &'a str
+    }
+    type CalcScoreFn<T> = Fn( &CalcState<T> ) -> T;
+
     /// # Levenshtein Distance 
     /// Calculates the string distance using the Levenshtein algorithm.
     /// It is also defined as minimum number of simple edit operations on string to change it into another.
@@ -19,7 +32,6 @@ pub mod levenshtein
     /// - Typically used to compare strings of similar length
     /// 
     /// ## Example
-    /// 
     /// ```
     /// let str1:String = String.from("anthropology");
     /// let str2:String = String.from("anthropophagi");
@@ -44,11 +56,10 @@ pub mod levenshtein
     /// -> The Levenshtein Distance of the passed 2 strings, 0 <= distance <= max(|str1.len|, |str2.len|)
     pub fn levenshtein_distance(str1:&str, str2:&str) -> usize
     {
-        let calc_score = | m:&ScoreMatrix, _, score, _, _| { score };
+        let calc_score = | state:&CalcState<usize> | { state.score as usize };
         let matrix = build_levenshtein_matrix(str1, str2, &calc_score );
-
         println!("Levenshtein Calc:\n{:?}\n", matrix);
-        matrix.last_score()
+        *matrix.get_last()
     }
     #[cfg(test)]
     mod levenshtein_distance_tests {
@@ -118,7 +129,6 @@ pub mod levenshtein
         }
     }
 
-
     /// # Optimal String Alignment Distance (or Restricted Edit Distance)
     /// Calculates the string distance using the OSA Distance algorithm.
     /// It is also defined as minimum number of simple edit operations on string to change it into another, but the list of allowed operations is extended.
@@ -148,19 +158,22 @@ pub mod levenshtein
     /// * `str1` - The first string to compare
     /// * `str2` - The Second string to compare
     /// -> The OSA Distance of the passed 2 strings
-    pub fn osa_distance(str1:&str, str2:&str) -> usize
+    pub fn osa_distance<'a>(str1:&'a str, str2:&'a str) -> usize
     {
-        let calc_score = | m:&ScoreMatrix, cost, score, i1, i2| { 
-            if i1>0 && i2>0 && m.are_chars_equal(i1,i2-1) && m.are_chars_equal(i1-1,i2) {
-                return min(score, m[(i1-2,i2-2)] + cost);
+        let calc_score = | s:&CalcState<usize> | { 
+
+            if  s.i1>0 && s.i2>0 && 
+                s.str1.nth_char(s.i1) == s.str2.nth_char(s.i2-1) &&
+                s.str1.nth_char(s.i1-1) == s.str2.nth_char(s.i2) {
+                return min(s.score as usize, s.matrix[(s.i1-2,s.i2-2)] + s.cost as usize );
             } else {
-                return score;
+                return s.score as usize;
             }
         };
         let matrix = build_levenshtein_matrix(str1, str2, &calc_score );
 
         println!("OSA Calc:\n{:?}\n", matrix);
-        matrix.last_score()
+        *matrix.get_last()
     }
     #[cfg(test)]
     mod osa_distance_tests {
@@ -268,7 +281,7 @@ pub mod levenshtein
                     let del = m[(i1+1, i2)] + 1;
                     let transp = m[(k,l)] + ((i1 as i32) - k - 1) as usize + ((i2 as i32) - l - 1) as usize + 1;
 
-                    min(subst, min(insert, min(del, transp)))
+                    min!(subst, insert, del, transp)
                 };
 
                 m[(i1+1,i2+1)] = score;
@@ -310,34 +323,37 @@ pub mod levenshtein
     }
 
 
-
-
-
-    fn build_levenshtein_matrix<'a>(str1:&'a str, str2:&'a str, calc_score: &Fn(&ScoreMatrix, usize,usize, i32, i32) -> usize) -> ScoreMatrix<'a>{
-        let mut matrix = ScoreMatrix::new(str1, str2);
-        matrix.init_incrementing_borders();
+    fn build_levenshtein_matrix<'a>(str1:&'a str, str2:&'a str, calc_score: &'a CalcScoreFn<usize>) -> DistMatrix<usize>{
+        let mut m:DistMatrix<usize> = DistMatrix::new(-1..str1.char_count(), -1..str2.char_count(), 0);
+        m.fill( &(-1..0), &(-1..str2.char_count()), &mut (0..));
+        m.fill( &(-1..str1.char_count()), &(-1..0), &mut (0..));
 
         for i1 in 0..str1.char_count()
         {
 
             for i2 in 0..str2.char_count()
             {
-                let ch1 = str1.nth_char(i1);
-                let ch2 = str2.nth_char(i2);
-                let cost:usize = if ch1 == ch2 {0} else {1};
+                let score = {
 
-                let val = {    
-                    let del = matrix[(i1-1,i2)] + 1;
-                    let insert = matrix[(i1,i2-1)] + 1;
-                    let subst = matrix[(i1-1,i2-1)] + cost;
-                    min3(del, insert, subst)
+                    let ch1 = str1.nth_char(i1);
+                    let ch2 = str2.nth_char(i2);
+                    let cost:i32 = if ch1 == ch2 {0} else {1};
+                    
+                    let score:i32 = {    
+                        let del = m[(i1-1,i2)] + 1;
+                        let insert = m[(i1,i2-1)] + 1;
+                        let subst = m[(i1-1,i2-1)] + cost as usize;
+                        min!( del, insert, subst) as i32
+                    };
+                    
+                    let state:CalcState<usize> = CalcState { matrix:&m, cost:cost, score: score, i1:i1, i2:i2, str1:str1, str2:str2  };
+                    calc_score(&state)
                 };
-
-                matrix[(i1,i2)] = calc_score(&matrix, cost, val, i1, i2);
+                m[(i1,i2)] = score;
             }
         }
 
-        matrix
+        m
     }
 
     /*
